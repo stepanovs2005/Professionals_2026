@@ -1,6 +1,6 @@
 # 5. Настройка доступа в Интернет
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](04-tunnel-config.md) | [Следующий модуль →](06-switching-config.md)
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](04-tunnel-config.md) | [Следующий модуль →](06-ospf-config.md)
 
 ---
 
@@ -333,4 +333,4 @@ ip nat source dynamic inside-to-outside pool vlan300 overload interface isp
 
 ---
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](04-tunnel-config.md) | [Следующий модуль →](06-switching-config.md)
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](04-tunnel-config.md) | [Следующий модуль →](06-ospf-config.md)
