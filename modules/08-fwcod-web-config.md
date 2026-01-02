@@ -341,4 +341,4 @@ echo "nameserver 77.88.8.8" > /etc/resolv.conf
 
 ---
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](07-switching-config.md) | [Следующий модуль →](09-next-config.md)
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](07-switching-config.md) | [Следующий модуль →](09-fwcod-vlan-config.md)
