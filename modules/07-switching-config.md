@@ -1,6 +1,6 @@
 # 7. Настройка коммутации между sw1-a и sw2-a
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](06-ospf-config.md) | [Следующий модуль →](08-next-config.md)
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](06-ospf-config.md) | [Следующий модуль →](08-fwcod-web-config.md)
 
 ---
 
@@ -484,4 +484,68 @@ ovs-vsctl set port mgmt vlan_mode=native-untagged
 
 ---
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](06-ospf-config.md) | [Следующий модуль →](08-next-config.md)
+## Проверка связности
+
+### Проверка Native VLAN на sw2-a
+
+```bash
+ovs-vsctl list port mgmt
+```
+
+![mgmt native sw2-a](../images/sw2-a_mgmt_native.png)
+
+### Проверка доступности коммутаторов
+
+#### С маршрутизатора rtr-a
+
+![Ping switches from rtr-a](../images/rtr-a_ping_switches.png)
+
+```
+rtr-a#ping 172.20.30.1
+4 packets transmitted, 4 received, 0% packet loss
+
+rtr-a#ping 172.20.30.2
+4 packets transmitted, 4 received, 0% packet loss
+```
+
+✅ Оба коммутатора доступны с rtr-a!
+
+#### С маршрутизатора rtr-cod (через туннель)
+
+![Ping switches from rtr-cod](../images/rtr-cod_ping_switches.png)
+
+```
+rtr-cod#ping 172.20.30.1
+4 packets transmitted, 4 received, 0% packet loss
+
+rtr-cod#ping 172.20.30.2
+4 packets transmitted, 4 received, 0% packet loss
+```
+
+✅ Оба коммутатора доступны с rtr-cod через GRE-туннель!
+
+### Проверка доступа в Интернет с коммутаторов
+
+#### С sw1-a
+
+![Ping internet from sw1-a](../images/sw1-a_ping_internet_final.png)
+
+```
+ping -c3 77.88.8.8
+3 packets transmitted, 3 received, 0% packet loss
+```
+
+#### С sw2-a
+
+![Ping internet from sw2-a](../images/sw2-a_ping_internet.png)
+
+```
+ping -c3 77.88.8.8
+3 packets transmitted, 3 received, 0% packet loss
+```
+
+✅ Доступ в Интернет с обоих коммутаторов работает!
+
+---
+
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](06-ospf-config.md) | [Следующий модуль →](08-fwcod-web-config.md)
