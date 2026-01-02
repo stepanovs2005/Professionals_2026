@@ -1,6 +1,6 @@
 # 10. Настройка коммутации между sw1-cod и sw2-cod
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](09-fwcod-vlan-config.md) | [Следующий модуль →](11-next-config.md)
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](09-fwcod-vlan-config.md) | [Следующий модуль →](11-hosts-ip-config.md)
 
 ---
 
@@ -732,4 +732,4 @@ ovs-vsctl list port mgmt-cod
 
 ---
 
-[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](09-fwcod-vlan-config.md) | [Следующий модуль →](11-next-config.md)
+[← Вернуться к оглавлению](../README.md) | [← Предыдущий модуль](09-fwcod-vlan-config.md) | [Следующий модуль →](11-hosts-ip-config.md)
