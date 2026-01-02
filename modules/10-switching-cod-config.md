@@ -22,6 +22,13 @@
   - [Добавление trunk-порта](#добавление-trunk-порта)
   - [Создание bond-интерфейса](#создание-bond-интерфейса)
   - [Настройка management-интерфейса](#настройка-management-интерфейса)
+- [sw2-cod — Конфигурация Open vSwitch](#sw2-cod--конфигурация-open-vswitch)
+  - [Подготовка интерфейсов sw2-cod](#подготовка-интерфейсов-sw2-cod)
+  - [Создание коммутатора sw2-cod](#создание-коммутатора-sw2-cod)
+  - [Добавление access-портов sw2-cod](#добавление-access-портов-sw2-cod)
+  - [Создание bond-интерфейса sw2-cod](#создание-bond-интерфейса-sw2-cod)
+  - [Настройка management-интерфейса sw2-cod](#настройка-management-интерфейса-sw2-cod)
+- [Итоговая конфигурация](#итоговая-конфигурация)
 
 ---
 
@@ -39,6 +46,17 @@
 | enp2s1 | srv1-cod | 100 | access |
 | enp2s29 | admin-cod | 300 | access |
 | enp3s12 | srv2-cod | 200 | access |
+
+### Схема подключения sw2-cod
+
+| Интерфейс | Направление | VLAN | Тип порта |
+|-----------|-------------|------|-----------|
+| ens19 | sw1-cod (bond) | 100,200,300,400,500 | trunk |
+| ens20 | sw1-cod (bond) | 100,200,300,400,500 | trunk |
+| ens21 | srv1-cod | 100 | access |
+| ens22 | srv1-cod | 200 | access |
+| enp2s29 | sip-cod | 500 | access |
+| enp3s12 | cli-cod | 400 | access |
 
 > ⚠️ **Примечание:** Имена интерфейсов могут отличаться в вашей конфигурации. Сверку производите по MAC-адресам.
 
@@ -449,6 +467,227 @@ ovs-vsctl list port mgmt-cod
 
 ---
 
+## sw2-cod — Конфигурация Open vSwitch
+
+### Подготовка интерфейсов sw2-cod
+
+Проверьте интерфейсы и определите их направление (сверка по MAC-адресам):
+
+```bash
+ip -c -br a
+```
+
+![sw2-cod interfaces down](../images/sw2-cod_ifaces_down.png)
+
+В данном примере:
+- `ens19` — интерфейс в сторону sw1-cod
+- `ens20` — интерфейс в сторону sw1-cod
+- `ens21` — интерфейс в сторону srv1-cod
+- `ens22` — интерфейс в сторону srv1-cod
+- `enp2s29` — интерфейс в сторону sip-cod
+- `enp3s12` — интерфейс в сторону cli-cod
+
+Для каждого интерфейса создайте директорию и файл `options`:
+
+```bash
+# Создание директорий
+mkdir -p /etc/net/ifaces/{ens19,ens20,ens21,ens22,enp2s29,enp3s12}
+
+# Создание файлов options для каждого интерфейса
+for iface in ens19 ens20 ens21 ens22 enp2s29 enp3s12; do
+    cat > /etc/net/ifaces/$iface/options << EOF
+TYPE=eth
+BOOTPROTO=static
+EOF
+done
+```
+
+Перезагрузите службу network:
+
+```bash
+systemctl restart network
+```
+
+Проверьте, что все интерфейсы перешли в статус UP:
+
+```bash
+ip -c -br a
+```
+
+![sw2-cod interfaces up](../images/sw2-cod_ifaces_up.png)
+
+✅ Все интерфейсы в статусе UP.
+
+### Создание коммутатора sw2-cod
+
+Создайте коммутатор с именем sw2-cod:
+
+```bash
+ovs-vsctl add-br sw2-cod
+```
+
+Проверьте создание коммутатора:
+
+```bash
+ovs-vsctl show
+```
+
+![sw2-cod OVS bridge](../images/sw2-cod_ovs_bridge.png)
+
+### Добавление access-портов sw2-cod
+
+Добавьте интерфейсы как access-порты с указанием VLAN:
+
+```bash
+# srv1-cod (VLAN 100)
+ovs-vsctl add-port sw2-cod ens21 tag=100
+
+# srv1-cod (VLAN 200)
+ovs-vsctl add-port sw2-cod ens22 tag=200
+
+# sip-cod (VLAN 500)
+ovs-vsctl add-port sw2-cod enp2s29 tag=500
+
+# cli-cod (VLAN 400)
+ovs-vsctl add-port sw2-cod enp3s12 tag=400
+```
+
+Проверьте добавление портов:
+
+```bash
+ovs-vsctl show
+```
+
+![sw2-cod OVS ports](../images/sw2-cod_ovs_ports.png)
+
+### Создание bond-интерфейса sw2-cod
+
+Включите модуль ядра для тегированного трафика (802.1Q):
+
+```bash
+modprobe 8021q
+echo "8021q" | tee -a /etc/modules
+```
+
+Создайте bond-интерфейс в режиме active-backup на базе интерфейсов ens19 и ens20:
+
+```bash
+ovs-vsctl add-bond sw2-cod bond0 ens19 ens20 bond_mode=active-backup
+```
+
+Настройте bond как trunk-порт:
+
+```bash
+ovs-vsctl set port bond0 trunk=100,200,300,400,500
+```
+
+Проверьте конфигурацию:
+
+```bash
+ovs-vsctl show
+```
+
+![sw2-cod OVS bond](../images/sw2-cod_ovs_bond.png)
+
+Проверьте режим работы bond-интерфейса:
+
+```bash
+ovs-appctl bond/show
+```
+
+![sw2-cod bond show](../images/sw2-cod_bond_show.png)
+
+✅ Bond-интерфейс в режиме `active-backup` успешно создан.
+
+### Настройка management-интерфейса sw2-cod
+
+Создайте директорию для management-интерфейса:
+
+```bash
+mkdir /etc/net/ifaces/mgmt-cod
+```
+
+Создайте файл `options`:
+
+```bash
+nano /etc/net/ifaces/mgmt-cod/options
+```
+
+![sw2-cod mgmt options](../images/sw2-cod_mgmt_options.png)
+
+Содержимое файла:
+
+```
+TYPE=ovsport
+BOOTPROTO=static
+CONFIG_IPV4=yes
+BRIDGE=sw2-cod
+VID=300
+```
+
+| Параметр | Описание |
+|----------|----------|
+| TYPE | Тип интерфейса (ovsport) |
+| BOOTPROTO | Способ назначения сетевых параметров |
+| CONFIG_IPV4 | Использовать конфигурацию IPv4 |
+| BRIDGE | Мост, к которому добавляется интерфейс |
+| VID | Принадлежность к VLAN |
+
+Назначьте IP-адрес и шлюз:
+
+```bash
+echo "192.168.30.2/24" > /etc/net/ifaces/mgmt-cod/ipv4address
+echo "default via 192.168.30.254" > /etc/net/ifaces/mgmt-cod/ipv4route
+```
+
+Перезагрузите службу network:
+
+```bash
+systemctl restart network
+```
+
+Проверьте назначенный IP-адрес:
+
+```bash
+ip -c -br -4 a
+```
+
+![sw2-cod mgmt IP](../images/sw2-cod_mgmt_ip.png)
+
+Проверьте маршрут по умолчанию:
+
+```bash
+ip -c r
+```
+
+![sw2-cod mgmt route](../images/sw2-cod_mgmt_route.png)
+
+Проверьте, что интерфейс добавился в коммутатор:
+
+```bash
+ovs-vsctl show
+```
+
+![sw2-cod OVS mgmt](../images/sw2-cod_ovs_mgmt.png)
+
+Настройте NativeVLAN для management-интерфейса:
+
+```bash
+ovs-vsctl set port mgmt-cod vlan_mode=native-untagged
+```
+
+Проверьте настройку:
+
+```bash
+ovs-vsctl list port mgmt-cod
+```
+
+![sw2-cod mgmt native](../images/sw2-cod_mgmt_native.png)
+
+✅ Коммутация на sw2-cod успешно настроена!
+
+---
+
 ## Итоговая конфигурация
 
 ### sw1-cod — Open vSwitch
@@ -470,6 +709,17 @@ ovs-vsctl list port mgmt-cod
 | Management IP | 192.168.30.1/24 |
 | Gateway | 192.168.30.254 |
 | VLAN | 300 (MGMT-COD) |
+
+### sw2-cod — Open vSwitch
+
+| Порт | Интерфейс | Тип | VLAN/Trunk |
+|------|-----------|-----|------------|
+| ens21 | srv1-cod | access | 100 |
+| ens22 | srv1-cod | access | 200 |
+| enp2s29 | sip-cod | access | 500 |
+| enp3s12 | cli-cod | access | 400 |
+| bond0 | sw1-cod | trunk | 100,200,300,400,500 |
+| mgmt-cod | management | internal | 300 (native-untagged) |
 
 ### sw2-cod — Сетевые параметры
 
