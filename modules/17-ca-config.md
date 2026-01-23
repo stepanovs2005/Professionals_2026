@@ -51,7 +51,7 @@ nano /etc/openssl/openssl.cnf
 
 Внесите следующие изменения в секцию `[ CA_default ]`:
 
-![Конфигурация OpenSSL](images/ca-openssl-config.png)
+![Конфигурация OpenSSL](../images/ca-openssl-config.png)
 
 **Ключевые параметры:**
 * `dir = /var/ca` — базовая директория CA
@@ -76,7 +76,7 @@ echo 01 > crlnumber
 
 **Результат:**
 
-![Структура директорий CA](images/ca-directory-structure.png)
+![Структура директорий CA](../images/ca-directory-structure.png)
 
 **Описание структуры:**
 | Директория/Файл | Назначение |
@@ -109,7 +109,7 @@ openssl req -new -key private/cakey.pem -out cacert.csr
 
 При выполнении команды укажите следующие данные:
 
-![Создание CSR для CA](images/ca-csr-create.png)
+![Создание CSR для CA](../images/ca-csr-create.png)
 
 **Заполняемые поля:**
 | Поле | Значение |
@@ -134,7 +134,7 @@ openssl x509 -req -days 1825 -in cacert.csr -signkey private/cakey.pem -out cace
 
 **Результат:**
 
-![Подпись корневого сертификата](images/ca-cert-sign.png)
+![Подпись корневого сертификата](../images/ca-cert-sign.png)
 
 ---
 
@@ -168,7 +168,7 @@ update-ca-trust
 
 * **Chromium:** `chrome://certificate-manager/localcerts/platformcerts`
 
-![Проверка сертификата в браузере](images/ca-browser-verify.png)
+![Проверка сертификата в браузере](../images/ca-browser-verify.png)
 
 **Проверьте:**
 * Common Name (CN): **ssa2026**
@@ -199,7 +199,7 @@ openssl genrsa -out newcerts/monitoring.key
 openssl req -new -key newcerts/monitoring.key -out newcerts/monitoring.csr
 ```
 
-![Создание CSR для мониторинга](images/ca-monitoring-csr.png)
+![Создание CSR для мониторинга](../images/ca-monitoring-csr.png)
 
 **Заполняемые поля:**
 | Поле | Значение |
@@ -232,7 +232,7 @@ EOF
 openssl x509 -req -CA cacert.pem -CAkey private/cakey.pem -in newcerts/monitoring.csr -out newcerts/monitoring.crt -days 365 -CAcreateserial -extfile monitoring.ext
 ```
 
-![Подпись сертификата мониторинга](images/ca-monitoring-sign.png)
+![Подпись сертификата мониторинга](../images/ca-monitoring-sign.png)
 
 ---
 
@@ -244,7 +244,7 @@ openssl x509 -req -CA cacert.pem -CAkey private/cakey.pem -in newcerts/monitorin
 openssl x509 -noout -text -in newcerts/monitoring.crt | head -n45
 ```
 
-![Проверка сертификата мониторинга](images/ca-monitoring-verify.png)
+![Проверка сертификата мониторинга](../images/ca-monitoring-verify.png)
 
 **Что проверить:**
 * **Issuer:** C=RU, O=IRPO, CN=ssa2026
