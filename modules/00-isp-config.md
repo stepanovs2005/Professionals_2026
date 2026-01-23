@@ -36,7 +36,7 @@ vim /etc/sysconfig/network
 
 ```
 HOSTNAME=isp
-DOMAINNAME=ssa2026.ru
+DOMAINNAME=ssa2026.region
 ```
 
 ![Настройка /etc/sysconfig/network](../images/sysconfig_network.png)
